@@ -13,6 +13,21 @@
       <script>
 (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="iQ-Hm5SsVmfUBOETQ0QZd";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
 </script>
+<script>
+  // Call this when a new agent reply text arrives
+  function zoulSpeak(text){
+    try{
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 1.05; u.pitch = 1.0; u.volume = 1.0;
+      // pick a voice if you want: const v = speechSynthesis.getVoices().find(v => v.name.includes('English'));
+      // if (v) u.voice = v;
+      speechSynthesis.cancel(); // stop any ongoing
+      speechSynthesis.speak(u);
+    }catch(e){ console.warn('TTS unavailable', e); }
+  }
+  // Example: zoulSpeak("Zoul online.");
+</script>
+
     </body>
   </html>
   
