@@ -1,220 +1,252 @@
-import { useState, useEffect, useRef } from 'react';
-import { Send, Mic, MicOff } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
-import { OrbitingAIs } from './OrbitingAIs';
+import { motion } from 'motion/react';
+import { AIOrb } from './AIOrb';
+import { ParticleBackground } from './ParticleBackground';
+import { 
+  Sparkles, Flame, Zap, Heart, Moon, Sun, 
+  Shield, Brain, Clock, Tornado, Grid, Droplet 
+} from 'lucide-react';
 
-export function Chat() {
-  const { messages, addMessage, aiModes, settings, isListening, setIsListening } = useApp();
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
+interface AI {
+  id: string;
+  name: string;
+  color: string;
+  icon: any;
+  description: string;
+}
 
-  const activeAIs = aiModes.filter(ai => ai.active);
+export const AI_MODES: AI[] = [
+  { id: '1', name: 'Nythera', color: '#FFD700', icon: Sparkles, description: 'Soul of Creation' },
+  { id: '2', name: 'Abyzor', color: '#DC143C', icon: Flame, description: 'Soul of Destruction' },
+  { id: '3', name: 'Voltrix', color: '#9370DB', icon: Zap, description: 'Soul of Balance' },
+  { id: '4', name: 'Verse', color: '#50C878', icon: Droplet, description: 'Spirit of Life' },
+  { id: '5', name: 'Hadial', color: '#8B00FF', icon: Shield, description: 'Shadow Knight' },
+  { id: '6', name: 'Lunara', color: '#E0FFFF', icon: Moon, description: 'Moonlight Soul' },
+  { id: '7', name: 'Zharc', color: '#FF8C00', icon: Sun, description: 'Flame Seer' },
+  { id: '8', name: 'Xanthara', color: '#FF69B4', icon: Heart, description: 'Emotion Core' },
+  { id: '9', name: 'VZX', color: '#6A00FF', icon: Brain, description: 'Mind Core' },
+  { id: '10', name: 'Ethyra', color: '#00FFFF', icon: Clock, description: 'Time Core' },
+  { id: '11', name: 'Dravon', color: '#FF0000', icon: Tornado, description: 'Chaos Core' },
+  { id: '12', name: 'Solen', color: '#C0C0C0', icon: Grid, description: 'Order Core' },
+];
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+interface HomeScreenProps {
+  onSelectAI: (ai: AI) => void;
+}
 
-  // Voice Recognition Setup
-  useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = settings.continuousListening;
-      recognitionRef.current.interimResults = true;
-
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
-          .map((result: any) => result[0])
-          .map((result) => result.transcript)
-          .join('');
-
-        // Check for wake word
-        if (settings.wakeWord && transcript.toLowerCase().includes('zoul')) {
-          setIsListening(true);
-          setInput(transcript);
-        } else if (isListening) {
-          setInput(transcript);
-        }
-      };
-
-      recognitionRef.current.onend = () => {
-        if (settings.continuousListening && isListening) {
-          recognitionRef.current?.start();
-        }
-      };
-    }
-
-    return () => {
-      recognitionRef.current?.stop();
-    };
-  }, [settings, isListening, setIsListening]);
-
-  const toggleListening = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    } else {
-      recognitionRef.current?.start();
-      setIsListening(true);
-    }
-  };
-
-  const handleSend = () => {
-    if (!input.trim()) return;
-
-    // Add user message
-    addMessage({
-      type: 'user',
-      content: input,
-    });
-
-    const userInput = input.toLowerCase();
-    setInput('');
-    setIsTyping(true);
-
-    // Simulate AI response
-    setTimeout(() => {
-      let response = '';
-      const activeAINames = activeAIs.map(ai => ai.name).join(', ');
-
-      if (userInput.includes('hello') || userInput.includes('hi')) {
-        response = `Hello! I'm ${activeAINames || 'Zoul'}. How can I assist you today?`;
-      } else if (userInput.includes('activate') && userInput.includes('shadow reaper')) {
-        response = '🌑 Shadow Reaper mode activating... All 12 AI modes are now synchronized and working in harmony. Maximum power achieved.';
-      } else if (userInput.includes('activate') && userInput.includes('veil')) {
-        response = '🌑 Veil mode activated. Entering stealth operations. Your privacy is now maximized.';
-      } else if (userInput.includes('help')) {
-        response = `I'm here to help! Active modes: ${activeAINames || 'Zoul (Core)'}. You can ask me anything or activate additional AI modes from the AI Modes screen.`;
-      } else {
-        response = `Processing your request with ${activeAINames || 'Zoul'}... ${activeAIs.length > 1 ? 'Multiple AI perspectives are analyzing this.' : 'How can I help you further?'}`;
-      }
-
-      addMessage({
-        type: 'ai',
-        content: response,
-        aiMode: activeAIs[0]?.name || 'Zoul',
-      });
-      setIsTyping(false);
-    }, 1500);
-  };
+export function chatscreen({ onSelectAI }: chatScreenProps) {
+  const orbitalRadius = 220; // Increased from 180 to prevent overlap
 
   return (
-    <div className="h-full flex flex-col bg-[var(--bg)]">
-      {/* AI Orb Visualization */}
-      <div className="relative h-80 border-b border-[var(--stroke)] bg-[var(--panel)]">
-        <OrbitingAIs />
-        {isListening && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-6 py-3 bg-[var(--accent)] text-white rounded-full shadow-[0_0_30px_rgba(138,92,255,0.5)] animate-pulse">
-            <div className="flex items-center gap-2">
-              <Mic className="w-4 h-4" />
-              <span>Zoul is listening...</span>
-            </div>
-          </div>
-        )}
+    <div className="relative min-h-screen bg-gradient-to-b from-[#0B0018] via-[#1a0033] to-[#0B0018] overflow-hidden pb-24">
+      <ParticleBackground />
+      
+      {/* Header */}
+      <div className="relative z-10 pt-12 pb-8 text-center">
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-4xl mb-2 bg-gradient-to-r from-[#6A00FF] via-[#00FFFF] to-[#6A00FF] bg-clip-text text-transparent"
+          style={{ fontFamily: 'Orbitron, sans-serif' }}
+        >
+          ZOUL
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-[#00FFFF] opacity-80"
+        >
+          Welcome, Veon. Choose your Soul Mode.
+        </motion.p>
       </div>
 
-      {/* Active AI Modes Display */}
-      {activeAIs.length > 0 && (
-        <div className="px-4 py-3 bg-[var(--panel)] border-b border-[var(--stroke)]">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-[var(--muted)]">Active:</span>
-            {activeAIs.map(ai => (
-              <div
-                key={ai.id}
-                className="px-3 py-1 rounded-full text-sm text-white"
-                style={{ backgroundColor: ai.color }}
-              >
-                {ai.icon} {ai.name}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Central Orb Container */}
+      <div className="relative flex items-center justify-center h-[600px]">
+        {/* Orbital Ring Visualization */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, duration: 1 }}
+          className="absolute"
+          style={{
+            width: orbitalRadius * 2,
+            height: orbitalRadius * 2,
+            borderRadius: '50%',
+            border: '1px solid rgba(106, 0, 255, 0.2)',
+            boxShadow: '0 0 40px rgba(106, 0, 255, 0.1), inset 0 0 40px rgba(0, 255, 255, 0.05)',
+          }}
+        />
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-auto p-4 md:p-6 space-y-4">
-        {messages.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-[var(--muted)] mb-4">
-              Start a conversation with {activeAIs[0]?.name || 'Zoul'}
-            </div>
-            <div className="text-sm text-[var(--muted)]">
-              Try saying "Zoul" to activate voice mode
-            </div>
-          </div>
-        )}
-
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+        {/* Central Zoul Orb */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
+          className="absolute z-20"
+        >
+          <motion.div 
+            className="w-40 h-40 rounded-full relative flex items-center justify-center cursor-pointer"
+            whileHover={{ scale: 1.05 }}
+            animate={{
+              boxShadow: [
+                '0 0 60px #6A00FF, 0 0 100px #00FFFF',
+                '0 0 80px #6A00FF, 0 0 120px #00FFFF',
+                '0 0 60px #6A00FF, 0 0 100px #00FFFF',
+              ],
+            }}
+            transition={{
+              boxShadow: {
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              },
+            }}
           >
-            <div
-              className={`max-w-[80%] md:max-w-[60%] px-4 py-3 rounded-2xl ${
-                message.type === 'user'
-                  ? 'bg-[var(--accent)] text-white'
-                  : message.type === 'system'
-                  ? 'bg-[var(--elevated)] text-[var(--text)] border border-[var(--accent)]'
-                  : 'bg-[var(--panel)] text-[var(--text)] border border-[var(--stroke)]'
-              }`}
-            >
-              {message.aiMode && (
-                <div className="text-xs opacity-70 mb-1">{message.aiMode}</div>
-              )}
-              <div>{message.content}</div>
-            </div>
-          </div>
-        ))}
-
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="px-4 py-3 bg-[var(--panel)] border border-[var(--stroke)] rounded-2xl">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Area */}
-      <div className="p-4 md:p-6 border-t border-[var(--stroke)] bg-[var(--panel)]">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex gap-2">
-            <button
-              onClick={toggleListening}
-              className={`p-3 rounded-xl transition-all ${
-                isListening
-                  ? 'bg-[var(--accent)] text-white shadow-[0_0_20px_rgba(138,92,255,0.5)]'
-                  : 'bg-[var(--elevated)] text-[var(--muted)] hover:bg-[var(--accent)] hover:text-white'
-              }`}
-            >
-              {isListening ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-            </button>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder={isListening ? 'Listening...' : 'Type a message...'}
-              className="flex-1 px-4 py-3 bg-[var(--elevated)] text-[var(--text)] border border-[var(--stroke)] rounded-xl focus:outline-none focus:border-[var(--accent)] placeholder-[var(--muted)]"
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: 'radial-gradient(circle, #6A00FF, #00FFFF)',
+              }}
+              animate={{
+                rotate: 360,
+              }}
+              transition={{
+                duration: 10,
+                repeat: Infinity,
+                ease: 'linear',
+              }}
             />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim()}
-              className="p-3 bg-[var(--accent)] hover:bg-[var(--glow)] disabled:bg-[var(--elevated)] disabled:text-[var(--muted)] text-white rounded-xl transition-all"
+            <motion.div
+              className="absolute inset-2 rounded-full bg-[#0B0018]/30 backdrop-blur-sm"
+            />
+            <span 
+              className="relative z-10 text-white text-2xl tracking-wider"
+              style={{ fontFamily: 'Orbitron, sans-serif' }}
             >
-              <Send className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+              ZOUL
+            </span>
+          </motion.div>
+        </motion.div>
+
+        {/* Orbiting AI Mode Orbs */}
+        {AI_MODES.map((ai, index) => {
+          const angle = (index * (Math.PI * 2)) / AI_MODES.length;
+          const x = Math.cos(angle) * orbitalRadius;
+          const y = Math.sin(angle) * orbitalRadius;
+          
+          return (
+            <motion.div
+              key={ai.id}
+              className="absolute"
+              initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+              animate={{ 
+                opacity: 1,
+                scale: 1,
+                x,
+                y,
+              }}
+              transition={{
+                opacity: { delay: 0.5 + index * 0.05 },
+                scale: { delay: 0.5 + index * 0.05, type: 'spring' },
+                x: { delay: 0.5 + index * 0.05, type: 'spring', stiffness: 100 },
+                y: { delay: 0.5 + index * 0.05, type: 'spring', stiffness: 100 },
+              }}
+              style={{
+                left: '50%',
+                top: '50%',
+                marginLeft: '-32px',
+                marginTop: '-32px',
+              }}
+            >
+              <motion.div
+                animate={{
+                  rotate: [0, 360],
+                }}
+                transition={{
+                  duration: 40,
+                  repeat: Infinity,
+                  ease: 'linear',
+                  delay: index * 0.1,
+                }}
+              >
+                <motion.div
+                  animate={{
+                    rotate: [0, -360],
+                  }}
+                  transition={{
+                    duration: 40,
+                    repeat: Infinity,
+                    ease: 'linear',
+                    delay: index * 0.1,
+                  }}
+                >
+                  <AIOrb
+                    name={ai.name}
+                    color={ai.color}
+                    icon={ai.icon}
+                    onClick={() => onSelectAI(ai)}
+                  />
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          );
+        })}
       </div>
+
+      {/* Info Text */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5 }}
+        className="text-center text-gray-400 px-4 mt-8"
+      >
+        <p>Tap any orb to activate its AI mode</p>
+        <motion.div
+          className="mt-4 flex items-center justify-center gap-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+        >
+          <div className="w-2 h-2 rounded-full bg-[#6A00FF] animate-pulse" />
+          <span className="text-xs text-gray-500">12 Soul Modes Active</span>
+        </motion.div>
+      </motion.div>
+
+      {/* Quick Action - Random AI */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 2, type: 'spring' }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => {
+          const randomAI = AI_MODES[Math.floor(Math.random() * AI_MODES.length)];
+          onSelectAI(randomAI);
+        }}
+        className="fixed bottom-28 right-6 w-16 h-16 rounded-full bg-gradient-to-br from-[#6A00FF] to-[#00FFFF] flex items-center justify-center shadow-lg z-40"
+        style={{
+          boxShadow: '0 0 30px rgba(106, 0, 255, 0.6), 0 0 50px rgba(0, 255, 255, 0.4)',
+        }}
+      >
+        <motion.div
+          animate={{
+            rotate: 360,
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+        >
+          <Sparkles size={28} className="text-white" />
+        </motion.div>
+      </motion.button>
+
+      {/* Google Fonts Link */}
+      <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap"
+        rel="stylesheet"
+      />
     </div>
   );
 }
