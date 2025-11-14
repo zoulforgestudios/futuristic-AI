@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from "motion/react";
 import { AIOrb } from './AIOrb';
 import { ParticleBackground } from './ParticleBackground';
 import { 
@@ -29,17 +29,17 @@ export const AI_MODES: AI[] = [
   { id: '12', name: 'Solen', color: '#C0C0C0', icon: Grid, description: 'Order Core' },
 ];
 
-interface HomeScreenProps {
+interface ChatScreenProps {
   onSelectAI: (ai: AI) => void;
 }
 
-export function chatscreen({ onSelectAI }: chatScreenProps) {
-  const orbitalRadius = 220; // Increased from 180 to prevent overlap
+export function ChatScreen({ onSelectAI }: ChatScreenProps) {
+  const orbitalRadius = 220;
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#0B0018] via-[#1a0033] to-[#0B0018] overflow-hidden pb-24">
       <ParticleBackground />
-      
+
       {/* Header */}
       <div className="relative z-10 pt-12 pb-8 text-center">
         <motion.h1
@@ -60,9 +60,9 @@ export function chatscreen({ onSelectAI }: chatScreenProps) {
         </motion.p>
       </div>
 
-      {/* Central Orb Container */}
+      {/* Orb Section */}
       <div className="relative flex items-center justify-center h-[600px]">
-        {/* Orbital Ring Visualization */}
+        {/* Orbital Ring */}
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -73,18 +73,19 @@ export function chatscreen({ onSelectAI }: chatScreenProps) {
             height: orbitalRadius * 2,
             borderRadius: '50%',
             border: '1px solid rgba(106, 0, 255, 0.2)',
-            boxShadow: '0 0 40px rgba(106, 0, 255, 0.1), inset 0 0 40px rgba(0, 255, 255, 0.05)',
+            boxShadow:
+              '0 0 40px rgba(106, 0, 255, 0.1), inset 0 0 40px rgba(0, 255, 255, 0.05)',
           }}
         />
 
-        {/* Central Zoul Orb */}
+        {/* Center orb */}
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
           className="absolute z-20"
         >
-          <motion.div 
+          <motion.div
             className="w-40 h-40 rounded-full relative flex items-center justify-center cursor-pointer"
             whileHover={{ scale: 1.05 }}
             animate={{
@@ -107,39 +108,32 @@ export function chatscreen({ onSelectAI }: chatScreenProps) {
               style={{
                 background: 'radial-gradient(circle, #6A00FF, #00FFFF)',
               }}
-              animate={{
-                rotate: 360,
-              }}
+              animate={{ rotate: 360 }}
               transition={{
                 duration: 10,
                 repeat: Infinity,
                 ease: 'linear',
               }}
             />
-            <motion.div
-              className="absolute inset-2 rounded-full bg-[#0B0018]/30 backdrop-blur-sm"
-            />
-            <span 
-              className="relative z-10 text-white text-2xl tracking-wider"
-              style={{ fontFamily: 'Orbitron, sans-serif' }}
-            >
+            <motion.div className="absolute inset-2 rounded-full bg-[#0B0018]/30 backdrop-blur-sm" />
+            <span className="relative z-10 text-white text-2xl tracking-wider" style={{ fontFamily: 'Orbitron, sans-serif' }}>
               ZOUL
             </span>
           </motion.div>
         </motion.div>
 
-        {/* Orbiting AI Mode Orbs */}
+        {/* Orbiting AIs */}
         {AI_MODES.map((ai, index) => {
           const angle = (index * (Math.PI * 2)) / AI_MODES.length;
           const x = Math.cos(angle) * orbitalRadius;
           const y = Math.sin(angle) * orbitalRadius;
-          
+
           return (
             <motion.div
               key={ai.id}
               className="absolute"
               initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
-              animate={{ 
+              animate={{
                 opacity: 1,
                 scale: 1,
                 x,
@@ -159,41 +153,22 @@ export function chatscreen({ onSelectAI }: chatScreenProps) {
               }}
             >
               <motion.div
-                animate={{
-                  rotate: [0, 360],
-                }}
-                transition={{
-                  duration: 40,
-                  repeat: Infinity,
-                  ease: 'linear',
-                  delay: index * 0.1,
-                }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
               >
-                <motion.div
-                  animate={{
-                    rotate: [0, -360],
-                  }}
-                  transition={{
-                    duration: 40,
-                    repeat: Infinity,
-                    ease: 'linear',
-                    delay: index * 0.1,
-                  }}
-                >
-                  <AIOrb
-                    name={ai.name}
-                    color={ai.color}
-                    icon={ai.icon}
-                    onClick={() => onSelectAI(ai)}
-                  />
-                </motion.div>
+                <AIOrb
+                  name={ai.name}
+                  color={ai.color}
+                  icon={ai.icon}
+                  onClick={() => onSelectAI(ai)}
+                />
               </motion.div>
             </motion.div>
           );
         })}
       </div>
 
-      {/* Info Text */}
+      {/* Info */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -201,6 +176,7 @@ export function chatscreen({ onSelectAI }: chatScreenProps) {
         className="text-center text-gray-400 px-4 mt-8"
       >
         <p>Tap any orb to activate its AI mode</p>
+
         <motion.div
           className="mt-4 flex items-center justify-center gap-2"
           initial={{ opacity: 0 }}
@@ -212,7 +188,7 @@ export function chatscreen({ onSelectAI }: chatScreenProps) {
         </motion.div>
       </motion.div>
 
-      {/* Quick Action - Random AI */}
+      {/* Random Mode Button */}
       <motion.button
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -220,29 +196,24 @@ export function chatscreen({ onSelectAI }: chatScreenProps) {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => {
-          const randomAI = AI_MODES[Math.floor(Math.random() * AI_MODES.length)];
+          const randomAI =
+            AI_MODES[Math.floor(Math.random() * AI_MODES.length)];
           onSelectAI(randomAI);
         }}
         className="fixed bottom-28 right-6 w-16 h-16 rounded-full bg-gradient-to-br from-[#6A00FF] to-[#00FFFF] flex items-center justify-center shadow-lg z-40"
         style={{
-          boxShadow: '0 0 30px rgba(106, 0, 255, 0.6), 0 0 50px rgba(0, 255, 255, 0.4)',
+          boxShadow:
+            '0 0 30px rgba(106, 0, 255, 0.6), 0 0 50px rgba(0, 255, 255, 0.4)',
         }}
       >
         <motion.div
-          animate={{
-            rotate: 360,
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
         >
           <Sparkles size={28} className="text-white" />
         </motion.div>
       </motion.button>
 
-      {/* Google Fonts Link */}
       <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap"
         rel="stylesheet"

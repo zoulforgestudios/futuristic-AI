@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AppProvider } from './contexts/AppContext';
 import { Home } from './components/Home';
-import { Chat } from './components/Chat';
+import { ChatScreen } from './components/Chat';
 import { AIModes } from './components/AIModes';
 import { Tasks } from './components/Tasks';
 import { Apps } from './components/Apps';
@@ -24,7 +24,10 @@ export default function App() {
       case 'home':
         return <Home onNavigate={setCurrentPage} />;
       case 'chat':
-        return <Chat />;
+        return <ChatScreen onSelectAI={(ai) => {
+          // navigate to AI Modes view when an AI is selected
+          setCurrentPage('ai-modes');
+        }} />;
       case 'ai-modes':
         return <AIModes />;
       case 'tasks':
